@@ -8,14 +8,14 @@ describe('SecureSessionPeer', () => {
   beforeAll(async () => {
     peer = await SecureSessionPeer()
   })
-  xit('can be instantiated', () => {
+  it('can be instantiated', () => {
     expect(peer).toBeDefined()
   })
   describe('has a public key', () => {
-    xit('that can be retrieved', () => {
+    it('that can be retrieved', () => {
       expect(peer.publicKey).toBeDefined()
     })
-    xit('that cannot be changed', () => {
+    it('that cannot be changed', () => {
       try {
         peer.publicKey = '42'
         fail()
@@ -24,10 +24,10 @@ describe('SecureSessionPeer', () => {
     })
   })
   describe('presumably hides a private key somewhere', () => {
-    xit('but that is being kept secret', () => {
+    it('but that is being kept secret', () => {
       expect(peer.privateKey).not.toBeDefined()
     })
-    xit('and cannot be changed', () => {
+    it('and cannot be changed', () => {
       try {
         peer.privateKey = '42'
         fail()
@@ -40,7 +40,7 @@ describe('SecureSessionPeer', () => {
     beforeAll(async () => {
       otherPeer = await SecureSessionPeer(peer)
     })
-    xit('resulting in 2 distinct peers with different public keys', () => {
+    it('resulting in 2 distinct peers with different public keys', () => {
       expect(peer).not.toEqual(otherPeer)
       expect(peer.publicKey).not.toEqual(otherPeer.publicKey)
     })
@@ -56,22 +56,22 @@ describe('SecureSessionPeer', () => {
         otherPeerCiphertext = res.ciphertext
         otherPeerNonce = res.nonce
       })
-      xit('returning a ciphertext and a nonce', () => {
+      it('returning a ciphertext and a nonce', () => {
         expect(peerCiphertext).toBeDefined()
         expect(peerNonce).toBeDefined()
         expect(otherPeerCiphertext).toBeDefined()
         expect(otherPeerNonce).toBeDefined()
       })
-      xit('that can be decrypted messages by the other peer', () => {
+      it('that can be decrypted messages by the other peer', () => {
         expect(otherPeer.decrypt(peerCiphertext, peerNonce)).toEqual(msg)
       })
-      xit('that cannot be decrypted with the public key', () => {
+      it('that cannot be decrypted with the public key', () => {
         try {
           nacl.crypto_secretbox_open_easy(peerCiphertext, peerNonce, peer.publicKey)
           fail()
         } catch (e) {}
       })
-      xit('that are integrity protected', () => {
+      it('that are integrity protected', () => {
         const {ciphertext, nonce} = peer.encrypt(msg)
         const tamperIdx = nacl.randombytes_uniform(ciphertext.length)
         ciphertext[tamperIdx] = (ciphertext[tamperIdx] + 1) % 256 // each el is 8 bits
@@ -82,7 +82,7 @@ describe('SecureSessionPeer', () => {
         }
       })
     })
-    xit('that exchange messages', async () => {
+    it('that exchange messages', async () => {
       await nacl.ready
       const peerMsg = nacl.randombytes_buf(1024)
       const otherPeerMsg = nacl.randombytes_buf(1024)
