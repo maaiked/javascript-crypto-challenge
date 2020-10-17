@@ -11,9 +11,14 @@ and salt. These need therefore not be specified when verifying
 a password against its hash.
  */
 
-const nacl = require('libsodium-wrappers');
+const _nacl = require('libsodium-wrappers');
 
 module.exports = async () => {
-    await nacl.ready;
+    await _nacl.ready;
+    const nacl = _nacl;
+
+    return Object.freeze({
+        verify: (hashedPw, pw) => nacl.crypto_pwhash_str_verify(hashedPw, pw)
+    })
 
 };
