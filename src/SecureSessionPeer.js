@@ -15,15 +15,12 @@ const Decryptor = require('./Decryptor.js');
 let client = true;
 let clientKeys;
 let serverKeys;
-let server = false;
-
-
+let message;
 
 const secureSessionPeer = async(securePeer = null) => {
     await _nacl.ready;
     const nacl = _nacl;
     let publicKey = null;
-    let message;
 
     clientKeys = nacl.crypto_kx_keypair();
     serverKeys = nacl.crypto_kx_keypair();
@@ -50,20 +47,13 @@ const secureSessionPeer = async(securePeer = null) => {
         if (!client) { return serverencryptor.encrypt(msg)
         } else return clientencryptor.encrypt(msg);
     }
-    /*
-    function sendor(msg){
-        message = encrypt(msg)
-    }
-    function receivor(){
-        this.decrypt(message.ciphertext, message.nonce)
-    }*/
 
     return Object.freeze({
-    publicKey: publicKey,
-    decrypt: (ciphertext, nonce) => decryptor(ciphertext, nonce),
-    encrypt:(msg) => encryptor(msg),
-    send: (msg) => {message = encryptor(msg)},
-    receive: () => { return decryptor(message.ciphertext, message.nonce)},
+        publicKey: publicKey,
+        decrypt: (ciphertext, nonce) => decryptor(ciphertext, nonce),
+        encrypt:(msg) => encryptor(msg),
+        send: (msg) => {message = encryptor(msg)},
+        receive: () => { return decryptor(message.ciphertext, message.nonce)},
     });
 };
 module.exports = secureSessionPeer;
