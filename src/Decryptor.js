@@ -6,7 +6,6 @@ message is sent several times, each message is encrypted with a unique nonce.
 We use authenticated encryption which allows the receiver to verify the
 integrity of the ciphertext. Libsodium does this transparently - if the ciphertext
 has been tampered with, the decryption function fails.
-
  */
 
 const _nacl = require('libsodium-wrappers');
