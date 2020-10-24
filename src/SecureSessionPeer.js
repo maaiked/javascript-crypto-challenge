@@ -26,9 +26,9 @@ const secureSessionPeer = async(securePeer) => {
     if (securePeer)
     {
         // tweede object werd aangemaakt : SERVER
-        securePeer.connect(keypair.publicKey);
-        sessionKeys = nacl.crypto_kx_server_session_keys(keypair.publicKey, keypair.privateKey, securePeer.publicKey);
-        setSessionKeys();
+        securePeer.connect(publicKey);
+        sessionKeys = nacl.crypto_kx_server_session_keys(publicKey, keypair.privateKey, securePeer.publicKey);
+        await setSessionKeys();
     }
 
     async function setSessionKeys(){
@@ -36,11 +36,8 @@ const secureSessionPeer = async(securePeer) => {
         messageencryptor = await Encryptor(sessionKeys.sharedTx);
     }
 
-    if (sessionKeys){
-    }
-
     function connector(key){
-        sessionKeys = nacl.crypto_kx_client_session_keys(keypair.publicKey, keypair.privateKey, key);
+        sessionKeys = nacl.crypto_kx_client_session_keys(publicKey, keypair.privateKey, key);
         setSessionKeys();
     }
 
@@ -53,7 +50,7 @@ const secureSessionPeer = async(securePeer) => {
     }
 
     return Object.freeze({
-        publicKey: publicKey,
+        publicKey,
         decrypt: (ciphertext, nonce) => decryptor(ciphertext, nonce),
         encrypt:(msg) => encryptor(msg),
         send: (msg) => {message = encryptor(msg)},
