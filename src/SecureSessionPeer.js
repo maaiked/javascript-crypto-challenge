@@ -12,40 +12,44 @@ de eerste om binnenkomende berichten te decrypteren, de laatste om uitgaande
 const _nacl = require('libsodium-wrappers');
 const Encryptor = require('./Encryptor.js');
 const Decryptor = require('./Decryptor.js');
-let client = true;
-let clientKeys;
-let serverKeys;
 let message;
 
-const secureSessionPeer = async(securePeer = null) => {
+const secureSessionPeer = async(securePeer) => {
     await _nacl.ready;
     const nacl = _nacl;
-    let publicKey = null;
+    let sessionKeys;
+    let keypair = nacl.crypto_kx_keypair();
+    let publicKey = keypair.publicKey;
+    let messagedecryptor;
+    let messageencryptor;
 
-    clientKeys = nacl.crypto_kx_keypair();
-    serverKeys = nacl.crypto_kx_keypair();
-    let clientsessionKey = nacl.crypto_kx_client_session_keys(clientKeys.publicKey, clientKeys.privateKey, serverKeys.publicKey);
-    let serversessionKey = nacl.crypto_kx_client_session_keys(serverKeys.publicKey, serverKeys.privateKey, clientKeys.publicKey);
-
-    if (client) {
-        publicKey = clientKeys.publicKey;
+    if (securePeer)
+    {
+        // tweede object werd aangemaakt : SERVER
+        securePeer.connect(keypair.publicKey);
+        sessionKeys = nacl.crypto_kx_server_session_keys(keypair.publicKey, keypair.privateKey, securePeer.publicKey);
+        setSessionKeys();
     }
-    else {
-        publicKey = serverKeys.publicKey;
+
+    async function setSessionKeys(){
+        messagedecryptor = await Decryptor(sessionKeys.sharedRx);
+        messageencryptor = await Encryptor(sessionKeys.sharedTx);
     }
 
-    let clientdecryptor = await Decryptor(clientsessionKey.sharedRx);
-    let serverdecryptor = await Decryptor(serversessionKey.sharedRx);
-    let clientencryptor = await Encryptor(clientsessionKey.sharedTx);
-    let serverencryptor = await Encryptor(serversessionKey.sharedTx);
+    if (sessionKeys){
+    }
+
+    function connector(key){
+        sessionKeys = nacl.crypto_kx_client_session_keys(keypair.publicKey, keypair.privateKey, key);
+        setSessionKeys();
+    }
 
     function decryptor(ciphertext, nonce) {
-        if (!client) { return serverdecryptor.decrypt(ciphertext, nonce);
-        } else return  clientdecryptor.decrypt(ciphertext, nonce);
+          return messagedecryptor.decrypt(ciphertext, nonce);
     }
+
     function encryptor(msg) {
-        if (!client) { return serverencryptor.encrypt(msg)
-        } else return clientencryptor.encrypt(msg);
+     return messageencryptor.encrypt(msg);
     }
 
     return Object.freeze({
@@ -54,6 +58,7 @@ const secureSessionPeer = async(securePeer = null) => {
         encrypt:(msg) => encryptor(msg),
         send: (msg) => {message = encryptor(msg)},
         receive: () => { return decryptor(message.ciphertext, message.nonce)},
+        connect: (key) => connector(key)
     });
 };
 module.exports = secureSessionPeer;
